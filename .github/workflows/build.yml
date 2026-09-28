@@ -10,8 +10,14 @@ jobs:
       - name: Checkout sudoingx bonsai2 branch
         run: git clone --depth 1 --branch bonsai2 https://github.com/sudoingX/llama.cpp.git src
 
-      - name: Setup MSVC environment
+      - name: Install VS2022 BuildTools (VC workload)
+        shell: cmd
+        run: choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" -y --no-progress
+
+      - name: Setup MSVC 2022 environment
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          vsversion: 2022
 
       - name: Setup CUDA 13.0 (full component merge)
         shell: pwsh
@@ -40,8 +46,6 @@ jobs:
             Remove-Item $z -Force
             Remove-Item $d -Recurse -Force
           }
-          "include/crt: $(Test-Path 'C:\cuda\include\crt\host_config.h')"
-          "nvvm/cicc: $(Test-Path 'C:\cuda\nvvm\bin\cicc.exe')"
           & "$root\bin\nvcc.exe" --version
 
       - name: Configure
@@ -49,7 +53,8 @@ jobs:
         run: |
           set "PATH=C:\cuda\bin;%PATH%"
           set "CUDA_PATH=C:\cuda"
-          cmake -S src -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89 -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF -DCUDAToolkit_ROOT=C:\cuda -DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler
+          cl 2>&1 | findstr /C:"Version"
+          cmake -S src -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89 -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF -DCUDAToolkit_ROOT=C:\cuda
 
       - name: Build
         shell: cmd
