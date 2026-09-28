@@ -1,0 +1,45 @@
+name: Build bonsai2 CUDA engine
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout sudoingx bonsai2 branch
+        run: |
+          git clone --depth 1 --branch bonsai2 https://github.com/sudoingX/llama.cpp.git src
+          dir src
+
+      - name: Install CUDA 12.4
+        run: choco install cuda --version=12.4.0 -y --no-progress
+        shell: cmd
+
+      - name: Configure
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          set PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin;%PATH%
+          cmake -S src -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89 -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF
+        shell: cmd
+
+      - name: Build
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          set PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin;%PATH%
+          cmake --build build -j 4
+        shell: cmd
+
+      - name: Collect binaries
+        run: |
+          mkdir out
+          copy build\bin\Release\*.exe out\
+          copy build\bin\Release\*.dll out\
+          copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\cudart64_12.dll" out\
+        shell: cmd
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bonsai2-cuda-engine
+          path: out
