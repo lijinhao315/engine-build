@@ -13,16 +13,21 @@ jobs:
       - name: Setup MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Setup CUDA 13.0 (component merge)
+      - name: Setup CUDA 13.0 (full component merge)
         shell: pwsh
         run: |
           $root = "C:\cuda"
           New-Item -ItemType Directory -Path $root -Force | Out-Null
           $comps = [ordered]@{
-            'cuda_nvcc'   = 'cuda_nvcc/windows-x86_64/cuda_nvcc-windows-x86_64-13.0.48-archive.zip'
-            'cuda_cudart' = 'cuda_cudart/windows-x86_64/cuda_cudart-windows-x86_64-13.0.48-archive.zip'
-            'libcublas'   = 'libcublas/windows-x86_64/libcublas-windows-x86_64-13.0.0.19-archive.zip'
-            'cuda_cccl'   = 'cuda_cccl/windows-x86_64/cuda_cccl-windows-x86_64-13.0.50-archive.zip'
+            'cuda_nvcc'       = 'cuda_nvcc/windows-x86_64/cuda_nvcc-windows-x86_64-13.0.48-archive.zip'
+            'libnvvm'         = 'libnvvm/windows-x86_64/libnvvm-windows-x86_64-13.0.48-archive.zip'
+            'cuda_crt'        = 'cuda_crt/windows-x86_64/cuda_crt-windows-x86_64-13.0.48-archive.zip'
+            'cuda_cudart'     = 'cuda_cudart/windows-x86_64/cuda_cudart-windows-x86_64-13.0.48-archive.zip'
+            'libcublas'       = 'libcublas/windows-x86_64/libcublas-windows-x86_64-13.0.0.19-archive.zip'
+            'cuda_cccl'       = 'cuda_cccl/windows-x86_64/cuda_cccl-windows-x86_64-13.0.50-archive.zip'
+            'cuda_cuobjdump'  = 'cuda_cuobjdump/windows-x86_64/cuda_cuobjdump-windows-x86_64-13.0.39-archive.zip'
+            'cuda_nvdisasm'   = 'cuda_nvdisasm/windows-x86_64/cuda_nvdisasm-windows-x86_64-13.0.39-archive.zip'
+            'cuda_cuxxfilt'   = 'cuda_cuxxfilt/windows-x86_64/cuda_cuxxfilt-windows-x86_64-13.0.39-archive.zip'
           }
           foreach($k in $comps.Keys){
             $u = "https://developer.download.nvidia.com/compute/cuda/redist/$($comps[$k])"
@@ -33,7 +38,10 @@ jobs:
             $inner = Get-ChildItem $d -Directory | Select-Object -First 1
             Copy-Item "$($inner.FullName)\*" $root -Recurse -Force
             Remove-Item $z -Force
+            Remove-Item $d -Recurse -Force
           }
+          "include/crt: $(Test-Path 'C:\cuda\include\crt\host_config.h')"
+          "nvvm/cicc: $(Test-Path 'C:\cuda\nvvm\bin\cicc.exe')"
           & "$root\bin\nvcc.exe" --version
 
       - name: Configure
