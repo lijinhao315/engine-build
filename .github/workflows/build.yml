@@ -10,27 +10,44 @@ jobs:
       - name: Checkout sudoingx bonsai2 branch
         run: git clone --depth 1 --branch bonsai2 https://github.com/sudoingX/llama.cpp.git src
 
-      - name: Install CUDA 12.4 (direct NVIDIA installer)
-        shell: cmd
-        run: |
-          curl.exe -L -o C:\cuda_installer.exe https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_551.61_windows.exe
-          C:\cuda_installer.exe -s
-          if not exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" (echo NVCC_MISSING & exit /b 1)
-          del C:\cuda_installer.exe
-
       - name: Setup MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup CUDA 13.0 (component merge)
+        shell: pwsh
+        run: |
+          $root = "C:\cuda"
+          New-Item -ItemType Directory -Path $root -Force | Out-Null
+          $comps = [ordered]@{
+            'cuda_nvcc'   = 'cuda_nvcc/windows-x86_64/cuda_nvcc-windows-x86_64-13.0.48-archive.zip'
+            'cuda_cudart' = 'cuda_cudart/windows-x86_64/cuda_cudart-windows-x86_64-13.0.48-archive.zip'
+            'libcublas'   = 'libcublas/windows-x86_64/libcublas-windows-x86_64-13.0.0.19-archive.zip'
+            'cuda_cccl'   = 'cuda_cccl/windows-x86_64/cuda_cccl-windows-x86_64-13.0.50-archive.zip'
+          }
+          foreach($k in $comps.Keys){
+            $u = "https://developer.download.nvidia.com/compute/cuda/redist/$($comps[$k])"
+            $z = "$env:TEMP\$k.zip"
+            curl.exe -sL $u -o $z
+            $d = "$env:TEMP\$k"
+            Expand-Archive $z -DestinationPath $d -Force
+            $inner = Get-ChildItem $d -Directory | Select-Object -First 1
+            Copy-Item "$($inner.FullName)\*" $root -Recurse -Force
+            Remove-Item $z -Force
+          }
+          & "$root\bin\nvcc.exe" --version
 
       - name: Configure
         shell: cmd
         run: |
-          set "PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin;%PATH%"
-          cmake -S src -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89 -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF
+          set "PATH=C:\cuda\bin;%PATH%"
+          set "CUDA_PATH=C:\cuda"
+          cmake -S src -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89 -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF -DCUDAToolkit_ROOT=C:\cuda
 
       - name: Build
         shell: cmd
         run: |
-          set "PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin;%PATH%"
+          set "PATH=C:\cuda\bin;%PATH%"
+          set "CUDA_PATH=C:\cuda"
           cmake --build build -j 4
 
       - name: Collect binaries
@@ -39,7 +56,7 @@ jobs:
           mkdir out
           copy build\bin\Release\*.exe out\
           copy build\bin\Release\*.dll out\
-          copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\cudart64_12.dll" out\
+          copy C:\cuda\bin\x64\*.dll out\
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
