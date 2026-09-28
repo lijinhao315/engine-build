@@ -17,16 +17,31 @@ jobs:
       - name: Install CUDA 13 (redist merge)
         shell: pwsh
         run: |
-          $base = 'https://developer.download.nvidia.com/compute/cuda/redist'
-          $comps = @('cuda_nvcc','libnvvm','cuda_crt','cuda_cudart','libcublas','cuda_cccl','cuda_cuobjdump','cuda_nvdisasm','cuda_cuxxfilt')
-          New-Item -ItemType Directory -Force -Path C:\cuda | Out-Null
-          foreach($c in $comps){
-            $man = Invoke-RestMethod "$base/redistrib_13.0.48.json"
-            $rel = $man.$c.'windows-x86_64'.relative_path
-            Invoke-WebRequest "$base/$rel" -OutFile "C:\dl_$c.zip"
-            Expand-Archive "C:\dl_$c.zip" -DestinationPath C:\cudatmp -Force
-            Get-ChildItem C:\cudatmp | ForEach-Object { Copy-Item $_.FullName\* C:\cuda -Recurse -Force }
+          $root = "C:\cuda"
+          New-Item -ItemType Directory -Path $root -Force | Out-Null
+          $comps = [ordered]@{
+            'cuda_nvcc'       = 'cuda_nvcc/windows-x86_64/cuda_nvcc-windows-x86_64-13.0.48-archive.zip'
+            'libnvvm'         = 'libnvvm/windows-x86_64/libnvvm-windows-x86_64-13.0.48-archive.zip'
+            'cuda_crt'        = 'cuda_crt/windows-x86_64/cuda_crt-windows-x86_64-13.0.48-archive.zip'
+            'cuda_cudart'     = 'cuda_cudart/windows-x86_64/cuda_cudart-windows-x86_64-13.0.48-archive.zip'
+            'libcublas'       = 'libcublas/windows-x86_64/libcublas-windows-x86_64-13.0.0.19-archive.zip'
+            'cuda_cccl'       = 'cuda_cccl/windows-x86_64/cuda_cccl-windows-x86_64-13.0.50-archive.zip'
+            'cuda_cuobjdump'  = 'cuda_cuobjdump/windows-x86_64/cuda_cuobjdump-windows-x86_64-13.0.39-archive.zip'
+            'cuda_nvdisasm'   = 'cuda_nvdisasm/windows-x86_64/cuda_nvdisasm-windows-x86_64-13.0.39-archive.zip'
+            'cuda_cuxxfilt'   = 'cuda_cuxxfilt/windows-x86_64/cuda_cuxxfilt-windows-x86_64-13.0.39-archive.zip'
           }
+          foreach($k in $comps.Keys){
+            $u = "https://developer.download.nvidia.com/compute/cuda/redist/$($comps[$k])"
+            $z = "$env:TEMP\$k.zip"
+            curl.exe -sL $u -o $z
+            $d = "$env:TEMP\$k"
+            Expand-Archive $z -DestinationPath $d -Force
+            $inner = Get-ChildItem $d -Directory | Select-Object -First 1
+            Copy-Item "$($inner.FullName)\*" $root -Recurse -Force
+            Remove-Item $z -Force
+            Remove-Item $d -Recurse -Force
+          }
+          & "$root\bin\nvcc.exe" --version
 
       - name: Fetch official source + apply instrumentation
         shell: pwsh
