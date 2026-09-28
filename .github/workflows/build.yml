@@ -67,8 +67,8 @@ jobs:
         shell: cmd
         run: |
           mkdir out
-          copy build\bin\Release\*.exe out\
-          copy build\bin\Release\*.dll out\
+          dir build\bin
+          xcopy /E /Y build\bin\* out\
           copy C:\cuda\bin\x64\*.dll out\
 
       - name: Upload artifact
