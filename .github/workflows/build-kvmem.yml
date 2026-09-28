@@ -22,7 +22,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path C:\cuda | Out-Null
           foreach($c in $comps){
             $man = Invoke-RestMethod "$base/redistrib_13.0.48.json"
-            $rel = $man.$c.windows-x86_64.relative_path
+            $rel = $man.$c.'windows-x86_64'.relative_path
             Invoke-WebRequest "$base/$rel" -OutFile "C:\dl_$c.zip"
             Expand-Archive "C:\dl_$c.zip" -DestinationPath C:\cudatmp -Force
             Get-ChildItem C:\cudatmp | ForEach-Object { Copy-Item $_.FullName\* C:\cuda -Recurse -Force }
