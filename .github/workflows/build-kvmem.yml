@@ -51,6 +51,10 @@ jobs:
           Copy-Item tools/llama-kvmem-server.cpp "$src/tools/llama-kvmem-server.cpp" -Force
           "SRC=$src" | Out-File $env:GITHUB_ENV -Append
 
+      - name: Apply kvmem cumulative patch
+        shell: bash
+        run: cd srcout/source && bash scripts/apply-patches.sh && ls llama.cpp/src/llama-kvmem-factory.h
+
       - name: Configure
         shell: pwsh
         run: cmake -S $env:SRC -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89-real -DGGML_CUDA=ON -DGGML_CUDA_FA_ALL_QUANTS=ON -DKVMEM_ENABLE_NVME=OFF -DCMAKE_BUILD_TYPE=Release -DCUDAToolkit_ROOT=C:\cuda -DLLAMA_CURL=OFF
