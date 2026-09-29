@@ -1,4 +1,4 @@
-name: build-kvmem-prism3
+﻿name: build-kvmem-prism3
 on: workflow_dispatch
 jobs:
   build:
@@ -55,11 +55,15 @@ jobs:
 
       - name: Configure
         shell: pwsh
-        run: cmake -S $env:SRC -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89-real -DGGML_CUDA=ON -DGGML_CUDA_FA_ALL_QUANTS=ON -DKVMEM_ENABLE_NVME=OFF -DCMAKE_BUILD_TYPE=Release -DCUDAToolkit_ROOT=C:\cuda -DLLAMA_CURL=OFF
+        run: |
+          $env:PATH = "$env:__VSCMD_PREINIT_PATH;$env:PATH"
+          cmake -S $env:SRC -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89-real -DGGML_CUDA=ON -DGGML_CUDA_FA_ALL_QUANTS=ON -DKVMEM_ENABLE_NVME=OFF -DCMAKE_BUILD_TYPE=Release -DCUDAToolkit_ROOT=C:\cuda -DLLAMA_CURL=OFF
 
       - name: Build
         shell: pwsh
-        run: cmake --build build -j 4
+        run: |
+          $env:PATH = "$env:__VSCMD_PREINIT_PATH;$env:PATH"
+          cmake --build build -j 4
 
       - name: Collect
         shell: pwsh
@@ -70,4 +74,5 @@ jobs:
         with:
           name: kvmem-prism3-sm89
           path: out
+
 
