@@ -53,7 +53,7 @@ jobs:
 
       - name: Apply kvmem cumulative patch
         shell: bash
-        run: cd srcout/source && bash scripts/apply-patches.sh && ls llama.cpp/src/llama-kvmem-factory.h
+        run: cd srcout/source && sed -i 's/\r$//' patches/*.patch scripts/*.sh 2>/dev/null; bash scripts/apply-patches.sh && ls llama.cpp/src/llama-kvmem-factory.h
 
       - name: Configure
         shell: pwsh
