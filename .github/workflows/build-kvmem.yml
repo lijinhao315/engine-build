@@ -42,6 +42,7 @@ jobs:
             Remove-Item $d -Recurse -Force
           }
           & "$root\bin\nvcc.exe" --version
+          Add-Content $env:GITHUB_ENV "PATH=C:\cuda\bin"
 
       - name: Fetch official source + apply instrumentation
         shell: pwsh
