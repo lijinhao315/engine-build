@@ -2,13 +2,9 @@ name: build-kvmem-prism3
 on: workflow_dispatch
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install VS2022 BuildTools
-        shell: pwsh
-        run: choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" -y --no-progress
 
       - uses: ilammy/msvc-dev-cmd@v1
         with:
