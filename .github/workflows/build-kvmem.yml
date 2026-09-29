@@ -1,4 +1,4 @@
-﻿name: build-kvmem-prism3
+name: build-kvmem-prism3
 on: workflow_dispatch
 jobs:
   build:
@@ -57,7 +57,9 @@ jobs:
         shell: pwsh
         run: |
           $env:PATH = "$env:PATH;$env:__VSCMD_PREINIT_PATH"
-          cmake -S $env:SRC -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89-real -DGGML_CUDA=ON -DGGML_CUDA_FA_ALL_QUANTS=ON -DKVMEM_ENABLE_NVME=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DCUDAToolkit_ROOT=C:\cuda -DLLAMA_CURL=OFF
+          $cl = Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\*\VC\Tools\MSVC\*\bin\HostX64\x64\cl.exe' | Sort-Object FullName -Descending | Select-Object -First 1
+          $env:PATH = "$(Split-Path $cl.FullName);$env:PATH"
+          cmake -S $env:SRC -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89-real -DGGML_CUDA=ON -DGGML_CUDA_FA_ALL_QUANTS=ON -DKVMEM_ENABLE_NVME=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER="$($cl.FullName)" -DCMAKE_CXX_COMPILER="$($cl.FullName)" -DCUDAToolkit_ROOT=C:\cuda -DLLAMA_CURL=OFF
 
       - name: Build
         shell: pwsh
