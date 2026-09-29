@@ -1,4 +1,4 @@
-name: build-kvmem-prism3
+﻿name: build-kvmem-prism3
 on: workflow_dispatch
 jobs:
   build:
@@ -46,11 +46,8 @@ jobs:
       - name: Fetch official source + apply instrumentation
         shell: pwsh
         run: |
-          curl.exe -sL --retry 3 --max-time 900 'https://github.com/kvmem/kvmem-llama.cpp/releases/download/v0.16.0-rc3-prism.3/kvmem-v0.16.0-rc3-prism.3-source.zip' -o src.zip
-          $sz = (Get-Item src.zip).Length
-          if($sz -lt 38000000){ throw "source zip too small: $sz" }
-          Expand-Archive src.zip -DestinationPath srcout -Force
-          $src = (Get-ChildItem srcout | Select-Object -First 1).FullName
+          git clone --depth 1 --branch v0.16.0-rc3-prism.3 --recurse-submodules --shallow-submodules https://github.com/kvmem/kvmem-llama.cpp srcout/source
+          $src = srcout/source
           Copy-Item tools/llama-kvmem-server.cpp "$src/tools/llama-kvmem-server.cpp" -Force
           Copy-Item . "$src\.github-tmp" -Recurse -Force -ErrorAction SilentlyContinue
           "SRC=$src" | Out-File $env:GITHUB_ENV -Append
@@ -72,3 +69,4 @@ jobs:
         with:
           name: kvmem-prism3-sm89
           path: out
+
