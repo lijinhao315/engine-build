@@ -46,7 +46,9 @@ jobs:
       - name: Fetch official source + apply instrumentation
         shell: pwsh
         run: |
-          Invoke-WebRequest 'https://github.com/kvmem/kvmem-llama.cpp/releases/download/v0.16.0-rc3-prism.3/kvmem-v0.16.0-rc3-prism.3-source.zip' -OutFile src.zip
+          curl.exe -sL --retry 3 --max-time 900 'https://github.com/kvmem/kvmem-llama.cpp/releases/download/v0.16.0-rc3-prism.3/kvmem-v0.16.0-rc3-prism.3-source.zip' -o src.zip
+          $sz = (Get-Item src.zip).Length
+          if($sz -lt 38000000){ throw "source zip too small: $sz" }
           Expand-Archive src.zip -DestinationPath srcout -Force
           $src = (Get-ChildItem srcout | Select-Object -First 1).FullName
           Copy-Item tools/llama-kvmem-server.cpp "$src/tools/llama-kvmem-server.cpp" -Force
