@@ -60,7 +60,7 @@ jobs:
           call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
           set PATH=%PATH%;C:\cuda\bin
           set "PATH=%PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64;C:\Program Files (x86)\Windows Kits\10\bin\x64"
-          cmake -S %SRC% -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89-real -DGGML_CUDA=ON -DGGML_CUDA_FA_ALL_QUANTS=ON -DKVMEM_ENABLE_NVME=OFF -DCMAKE_BUILD_TYPE=Release -DCUDAToolkit_ROOT=C:\cuda -DLLAMA_CURL=OFF
+          cmake -S %SRC% -B build -G Ninja -DCMAKE_CUDA_ARCHITECTURES=89-real -DGGML_CUDA=ON -DGGML_CUDA_FA_ALL_QUANTS=ON -DKVMEM_ENABLE_NVME=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DLLAMA_BUILD_TESTS=OFF -DCUDAToolkit_ROOT=C:\cuda -DLLAMA_CURL=OFF
 
       - name: Build
         shell: cmd
@@ -80,6 +80,7 @@ jobs:
         with:
           name: kvmem-prism3-sm89
           path: out
+
 
 
 
