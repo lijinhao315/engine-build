@@ -43,6 +43,7 @@ jobs:
       - name: Fetch official source + apply instrumentation
         shell: pwsh
         run: |
+          $env:PATH = "C:\Program Files\Git\cmd;$env:PATH"
           git clone --depth 1 --branch v0.16.0-rc3-prism.3 --recurse-submodules --shallow-submodules https://github.com/kvmem/kvmem-llama.cpp srcout/source
           $src = 'srcout/source'
           Copy-Item tools/llama-kvmem-server.cpp "$src/tools/llama-kvmem-server.cpp" -Force
